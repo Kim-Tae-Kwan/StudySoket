@@ -29,7 +29,7 @@ int main(int argc,char*argv[])
 		exit(1);
 		
 	}
-	 fp=fopen("file_server.c","rb");
+	 fp=fopen("kim.jpg","rb");
 	 serv_sd=socket(PF_INET,SOCK_STREAM,0);
 
 	 memset(&serv_adr,0,sizeof(serv_adr));
@@ -42,6 +42,7 @@ int main(int argc,char*argv[])
 
 	 clnt_adr_sz=sizeof(clnt_adr);
 	 clnt_sd=accept(serv_sd,(struct sockaddr*)&clnt_adr,&clnt_adr_sz);
+
 	 while(1)
 	 {
 		read_cnt=fread((void*)buf,1,BUF,fp);

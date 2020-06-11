@@ -5,6 +5,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
+
 #define BUF 30
 void err(char*mes)
 {

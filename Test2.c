@@ -15,7 +15,7 @@ char webpage[]="HTTP/1.1 200 OK\r\n"
         "<html><head><title> KimTK Web Page </title>\r\n"
         "<style>body {background-color:#FFFF00}</style></head>\r\n"
         "<body><center><h1>Hi My name is KimTK</h1><br>\r\n"
-        "<img src=\"game.jpeg\"></center></body></html>";
+        "<img src=\"kim.jpg\"></center></body></html>";
 
 
 void Error_handling(char*message)
@@ -72,13 +72,13 @@ int main(int argc,char*argv[])
 			memset(buf,0,2048);
 			read(clnt_sock,buf,2047);
 			printf("%s\n",buf);
-			if(!strncmp(buf,"GET /game.jpeg",14))
+			if(!strncmp(buf,"GET /kim.jpg",12))
 			{
-				fdimg=open("game.jpeg",O_RDONLY);
+				fdimg=open("kim.jpg",O_RDONLY);
 				read(fdimg,img_buf,sizeof(img_buf));
 				write(clnt_sock,img_buf,sizeof(img_buf));
 				close(fdimg);
-				printf("game.jpeg\n");
+				printf("kim.jpg\n");
 			}
 			else
 				write(clnt_sock,webpage,sizeof(webpage));

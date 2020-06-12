@@ -5,7 +5,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <pthread.h>
-#define BUF 30
+#define BUF 70000
 
 void * Send_Html(void*arg);
 
@@ -15,8 +15,8 @@ char webpage[]="HTTP/1.1 200 OK\r\n"
         "<!DOCTYPE html>\r\n"
         "<html><head><title> KimTK Web Page </title>\r\n"
         "<style>body {background-color:#FFFF00}</style></head>\r\n"
-        "<body><center><h1>Hi My name is KimTK</h1><br>\r\n";
-        //"<img src=\"kim.jpg\"></center></body></html>";
+        "<body><center><h1>Hi My name is KimTK</h1><br>\r\n"
+        "<img src=\"kim.jpg\"></center></body></html>";
 
 void err(char*mes)
 {
@@ -32,8 +32,8 @@ int main(int argc,char*argv[])
     int serv_sock,clnt_sock;
     struct sockaddr_in serv_adr,clnt_adr;
     int clnt_adr_sz,option=1;
-    char buf[BUF];
     pthread_t t_id;
+    
     if(argc!=2)
     {
         printf("Usage %s <PORT>\n",argv[0]);
@@ -57,11 +57,13 @@ int main(int argc,char*argv[])
     {   
         clnt_adr_sz=sizeof(clnt_adr);
         clnt_sock=accept(serv_sock,(struct sockaddr*)&clnt_adr,&clnt_adr_sz);
-        printf("thread 생성\n");
+        puts("New client connection");
 
-        write(clnt_sock,&webpage,sizeof(webpage));
+        
         pthread_create(&t_id,NULL,Send_Html,(void*)&clnt_sock);
         pthread_detach(t_id);
+
+        
     }
     close(serv_sock);
     return 0;
@@ -70,85 +72,60 @@ int main(int argc,char*argv[])
 }
 void * Send_Html(void*arg)
 {
-    printf("send 함수\n");
+    
     int clnt_sock=*((int*)arg);
-    char message[1024];
-    // FILE* pFile;
-    // long lSize;
-    // char* buffer;
-    // size_t result;
-
-    FILE*fp;
+    char buf[2048];
+    long size;
+	FILE*fp;
     int read_cnt;
-    char buf[BUF];
+    char img_buf[BUF];
+    long result;
 
+	//close(serv_sock);
+	memset(buf,0,2048);
+    read(clnt_sock,buf,2047);
+    printf("%s\n",buf);
     
-    read(clnt_sock,message,BUF);
-    for(int i=0;i<1024;i++)
+
+    if(!strncmp(buf,"GET /kim.jpg",12))
     {
-        printf("%c",message[i]);
+		printf("1\n");    
+        fp=fopen("kim.jpg","rb"); 
+        if(fp==NULL) 
+        { 
+        	fputs("File error",stderr);
+        	exit(1);
+		}
+		printf("2\n");
+		fseek(fp,0,SEEK_END);
+		printf("3\n");
+		size=ftell(fp);
+		printf("4\n");
+		rewind(fp);
+		printf("5\n");
+		result=fread(img_buf,1,size,fp);
+		printf("10\n");
+		if(result!=size)
+		{	
+			printf("9\n");
+			fputs("Reading error",stderr);
+			exit(3);
+		}
+		printf("6\n");
+		write(clnt_sock,img_buf,sizeof(img_buf));
+		printf("7\n");
+		fclose(fp);
+		printf("8\n");
+		printf("kim.jpg\n");
+     	
+
     }
-    printf("\n");
-    
+	else
+		write(clnt_sock,webpage,sizeof(webpage));
 
-    printf("if전\n");
-    if(!strncmp(message,"GET /kim.jpg",13))
-    {
-         printf("if진입\n");
-        // pFile = fopen("kim.jpg", "rb");
-        // if (pFile == NULL) {
-        //     fputs("File error", stderr);
-        //     exit(1);
-        // }
-
-        // // 파일의 크기를 ISize 에 저장한다.
-        // fseek(pFile, 0, SEEK_END);
-        // lSize = ftell(pFile);
-        // rewind(pFile);
-
-        // // 전체 파일의 내용을 받을 수 있을 정도의 크기로 메모리를 할당한다.
-        // buffer = (char*)malloc(sizeof(char) * lSize);
-        // if (buffer == NULL) {
-        //     fputs("Memory error", stderr);
-        //     exit(2);
-        // }
-
-        // // 그 파일의 내용을 버퍼에 저장한다.
-        // result = fread(buffer, 1, lSize, pFile);
-        // if (result != lSize) {
-        //     fputs("Reading error", stderr);
-        //     exit(3);
-        // }
-
-        // fclose(pFile);
-        // /* 이제 파일의 모든 내용은 버퍼에 들어가게 된다. */
-        // write(clnt_sock,&buffer,sizeof(buffer));
-        // printf("write\n");
-        // // 종료
-        
-        // free(buffer);
-
-
-        fp=fopen("kim.jpg","rb");
-
-        while(1)
-        {
-            read_cnt=fread((void*)buf,1,BUF,fp);
-            if(read_cnt<BUF)
-            {
-                write(clnt_sock,buf,read_cnt);
-                break;
-            }
-            write(clnt_sock,buf,BUF);
-
-        }
-    }
-
-
-
-    
-    fclose(fp);
-    close(clnt_sock);
+	close(clnt_sock);
+	puts("closing....");
+	
     return NULL;
 }
 
